@@ -1,9 +1,9 @@
 import { AxiosInstance, AxiosError } from 'axios';
-import { MIME_TYPES } from '../lib/utils';
-import { FileUploadResponse } from '../types/upload';
 import { Readable } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
+import { MIME_TYPES } from '../lib/utils';
+import { FileUploadResponse } from '../types';
 
 function getMimeType(file: Blob | File | Buffer, filename?: string): string {
   if ((file instanceof File || file instanceof Blob) && file.type) {

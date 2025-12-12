@@ -1,5 +1,5 @@
 import { AxiosInstance, isAxiosError } from 'axios';
-import { PasteResponse, CreatePasteRequest } from '../types/paste';
+import { PasteResponse, CreatePasteRequest } from '../types';
 
 export async function createPaste(
   api: AxiosInstance,
