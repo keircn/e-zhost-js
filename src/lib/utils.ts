@@ -1,4 +1,27 @@
+import { AxiosError } from 'axios';
+
 export const BASE_URL = 'https://api.e-z.host';
+
+export function getErrorMessage(error: unknown, context: string): string {
+  if (error instanceof AxiosError) {
+    const status = error.response?.status;
+    const apiMessage = error.response?.data?.message;
+
+    if (status === 401) {
+      return `${context}: Authentication error - Check your API key`;
+    }
+    if (status === 422) {
+      return `${context}: Validation error - ${apiMessage || 'Check your input data'}`;
+    }
+    return `${context}: ${apiMessage || error.message}`;
+  }
+
+  if (error instanceof Error) {
+    return `${context}: ${error.message}`;
+  }
+
+  return `${context}: An unexpected error occurred`;
+}
 
 export const MIME_TYPES: Record<string, string> = {
   jpg: 'image/jpeg',

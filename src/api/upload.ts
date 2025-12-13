@@ -1,9 +1,11 @@
-import { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance } from 'axios';
 import { Readable } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
-import { MIME_TYPES } from '../lib/utils';
+import { getErrorMessage, MIME_TYPES } from '../lib/utils';
 import { FileUploadResponse } from '../types';
+
+const DEFAULT_FILENAME = 'upload.dat';
 
 function getMimeType(file: Blob | File | Buffer, filename?: string): string {
   if ((file instanceof File || file instanceof Blob) && file.type) {
@@ -31,56 +33,74 @@ async function streamToBuffer(stream: Readable): Promise<Buffer> {
   });
 }
 
+function getFilenameFromStream(stream: ReadStream): string {
+  const filePath = stream.path;
+  if (typeof filePath === 'string') {
+    return basename(filePath);
+  }
+  if (Buffer.isBuffer(filePath)) {
+    return basename(filePath.toString());
+  }
+  return DEFAULT_FILENAME;
+}
+
+async function processFileInput(
+  file: Buffer | Blob | File | Readable,
+  filename?: string
+): Promise<{ buffer: Buffer; filename: string } | FileUploadResponse> {
+  let fileBuffer: Buffer;
+  let resolvedFilename = filename;
+
+  if (file instanceof Readable) {
+    fileBuffer = await streamToBuffer(file);
+    if (!resolvedFilename) {
+      resolvedFilename =
+        file instanceof ReadStream ? getFilenameFromStream(file) : DEFAULT_FILENAME;
+    }
+  } else if (file instanceof File) {
+    fileBuffer = Buffer.from(await file.arrayBuffer());
+    resolvedFilename = resolvedFilename || file.name;
+  } else if (file instanceof Blob) {
+    fileBuffer = Buffer.from(await file.arrayBuffer());
+    resolvedFilename = resolvedFilename || DEFAULT_FILENAME;
+  } else if (Buffer.isBuffer(file)) {
+    fileBuffer = file;
+    resolvedFilename = resolvedFilename || DEFAULT_FILENAME;
+  } else {
+    return { success: false, message: 'Invalid file type provided', error: 'Invalid file type' };
+  }
+
+  return { buffer: fileBuffer, filename: resolvedFilename || DEFAULT_FILENAME };
+}
+
+interface UploadFileOptions {
+  timeout?: number;
+}
+
 export async function uploadFile(
   api: AxiosInstance,
   file: Buffer | Blob | File | Readable,
   filename?: string,
-  options: { timeout?: number } = {}
+  options: UploadFileOptions = {}
 ): Promise<FileUploadResponse> {
   if (!file) {
     return { success: false, message: 'File is required', error: 'File is required' };
   }
 
-  let fileBuffer: Buffer;
-  let resolvedFilename = filename;
+  let result: { buffer: Buffer; filename: string } | FileUploadResponse;
 
   try {
-    if (file instanceof Readable) {
-      fileBuffer = await streamToBuffer(file);
-      if (!resolvedFilename) {
-        if (file instanceof ReadStream) {
-          const filePath: string | Buffer | undefined = file.path;
-          if (typeof filePath === 'string') {
-            resolvedFilename = basename(filePath);
-          } else if (Buffer.isBuffer(filePath)) {
-            resolvedFilename = basename(filePath.toString());
-          } else {
-            resolvedFilename = 'upload.dat';
-          }
-        } else {
-          resolvedFilename = 'upload.dat';
-        }
-      }
-    } else if (file instanceof File) {
-      fileBuffer = Buffer.from(await file.arrayBuffer());
-      resolvedFilename = resolvedFilename || file.name;
-    } else if (file instanceof Blob) {
-      fileBuffer = Buffer.from(await file.arrayBuffer());
-      resolvedFilename = resolvedFilename || 'upload.dat';
-    } else if (Buffer.isBuffer(file)) {
-      fileBuffer = file;
-      resolvedFilename = resolvedFilename || 'upload.dat';
-    } else {
-      return { success: false, message: 'Invalid file type provided.', error: 'Invalid file type' };
-    }
-  } catch (error: unknown) {
+    result = await processFileInput(file, filename);
+  } catch (error) {
     const err = error as Error;
     return { success: false, message: 'Failed to process file input', error: err.message };
   }
 
-  if (!resolvedFilename) {
-    resolvedFilename = 'upload.dat';
+  if ('success' in result) {
+    return result;
   }
+
+  const { buffer: fileBuffer, filename: resolvedFilename } = result;
 
   const mimeType = getMimeType(
     new Blob([fileBuffer], { type: 'application/octet-stream' }),
@@ -97,7 +117,6 @@ export async function uploadFile(
 
   const { timeout = 30000 } = options;
   const formData = new FormData();
-
   const fileToUpload = new Blob([fileBuffer], { type: mimeType });
   formData.append('file', fileToUpload, resolvedFilename);
 
@@ -109,29 +128,20 @@ export async function uploadFile(
       },
     });
 
-    if (response.data && response.data.success) {
+    if (response.data?.success) {
       return response.data;
-    } else {
-      return {
-        success: false,
-        message: response.data?.message || 'Upload failed due to an API error.',
-        error: response.data?.message || 'API indicated failure.',
-      };
     }
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      const apiErrorMessage = error.response?.data?.message || error.message;
-      return {
-        success: false,
-        message: `Failed to upload file: ${apiErrorMessage}`,
-        error: apiErrorMessage,
-      };
-    }
-    const err = error as Error;
+
     return {
       success: false,
-      message: 'An unexpected error occurred during file upload.',
-      error: err.message,
+      message: response.data?.message || 'Upload failed due to an API error',
+      error: response.data?.message || 'API indicated failure',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: getErrorMessage(error, 'Failed to upload file'),
+      error: getErrorMessage(error, 'Failed to upload file'),
     };
   }
 }

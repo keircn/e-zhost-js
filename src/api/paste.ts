@@ -1,15 +1,18 @@
-import { AxiosInstance, isAxiosError } from 'axios';
+import { AxiosInstance } from 'axios';
+import { getErrorMessage } from '../lib/utils';
 import { PasteResponse, CreatePasteRequest } from '../types';
+
+interface CreatePasteOptions {
+  title?: string;
+  description?: string;
+  language?: string;
+  timeout?: number;
+}
 
 export async function createPaste(
   api: AxiosInstance,
   text: string,
-  options: {
-    title?: string;
-    description?: string;
-    language?: string;
-    timeout?: number;
-  } = {}
+  options: CreatePasteOptions = {}
 ): Promise<PasteResponse> {
   if (!text?.trim()) {
     throw new Error('Paste text is required and cannot be empty');
@@ -25,29 +28,16 @@ export async function createPaste(
   };
 
   try {
-    const response = await api.post('/paste', payload, { timeout });
+    const response = await api.post<PasteResponse>('/paste', payload, { timeout });
 
-    if (response.data && response.data.success) {
+    if (response.data?.success) {
       return response.data;
-    } else {
-      throw new Error(`Invalid response: ${JSON.stringify(response.data)}`);
     }
-  } catch (error: unknown) {
-    if (isAxiosError(error)) {
-      const axiosError = error;
-      if (axiosError.response?.status === 422) {
-        throw new Error(
-          `Failed to create paste: Validation error - ${axiosError.response?.data?.message || 'Check your input data'}`
-        );
-      } else if (axiosError.response?.status === 401) {
-        throw new Error('Failed to create paste: Authentication error - Check your API key');
-      } else {
-        throw new Error(
-          `Failed to create paste: ${axiosError.response?.data?.message || axiosError.message}`
-        );
-      }
+    throw new Error(`Invalid response: ${JSON.stringify(response.data)}`);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Invalid response')) {
+      throw error;
     }
-
-    throw error;
+    throw new Error(getErrorMessage(error, 'Failed to create paste'));
   }
 }

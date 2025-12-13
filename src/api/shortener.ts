@@ -1,4 +1,5 @@
-import { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance } from 'axios';
+import { getErrorMessage } from '../lib/utils';
 import { ShortenerResponse, ShortenerRequest } from '../types';
 
 interface ShortenUrlOptions {
@@ -38,10 +39,6 @@ export async function shortenUrl(
     });
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError) {
-      const apiErrorMessage = error.response?.data?.message;
-      throw new Error(`Failed to shorten URL: ${apiErrorMessage || error.message}`);
-    }
-    throw error;
+    throw new Error(getErrorMessage(error, 'Failed to shorten URL'));
   }
 }
