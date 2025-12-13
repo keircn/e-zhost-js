@@ -8,6 +8,6 @@ export type {
   CreatePasteRequest,
 } from './types';
 
-export { shortenUrl } from './routes/shortener';
-export { uploadFile } from './routes/upload';
-export { createPaste } from './routes/paste';
+export { shortenUrl } from './api/shortener';
+export { uploadFile } from './api/upload';
+export { createPaste } from './api/paste';

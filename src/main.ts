@@ -2,9 +2,9 @@ import axios, { AxiosInstance } from 'axios';
 import { Readable } from 'stream';
 import { BASE_URL } from './lib/utils';
 import { ShortenerResponse, FileUploadResponse, PasteResponse } from './types';
-import { shortenUrl } from './routes/shortener';
-import { uploadFile } from './routes/upload';
-import { createPaste } from './routes/paste';
+import { shortenUrl } from './api/shortener';
+import { uploadFile } from './api/upload';
+import { createPaste } from './api/paste';
 
 export class EZHostSDK {
   private api: AxiosInstance;
