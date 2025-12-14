@@ -1,7 +1,14 @@
 import axios, { AxiosInstance } from 'axios';
 import { Readable } from 'stream';
 import { BASE_URL } from './lib/utils';
-import { ShortenerResponse, FileUploadResponse, PasteResponse } from './types';
+import {
+  ShortenerResponse,
+  FileUploadResponse,
+  PasteResponse,
+  ShortenUrlOptions,
+  UploadFileOptions,
+  CreatePasteOptions,
+} from './types';
 import { shortenUrl } from './api/shortener';
 import { uploadFile } from './api/upload';
 import { createPaste } from './api/paste';
@@ -23,46 +30,19 @@ export class EZHostSDK {
     });
   }
 
-  async shortenUrl(
-    url: string,
-    options?: { maxUrlLength?: number; timeout?: number }
-  ): Promise<ShortenerResponse> {
-    try {
-      return await shortenUrl(this.api, url, options);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(`Failed to shorten URL: ${error.response?.data?.message || error.message}`);
-      }
-      throw error;
-    }
+  async shortenUrl(url: string, options?: ShortenUrlOptions): Promise<ShortenerResponse> {
+    return shortenUrl(this.api, url, options);
   }
 
   async uploadFile(
     file: Buffer | Blob | File | Readable,
     filename?: string,
-    options?: { timeout?: number }
+    options?: UploadFileOptions
   ): Promise<FileUploadResponse> {
-    return await uploadFile(this.api, file, filename, options);
+    return uploadFile(this.api, file, filename, options);
   }
 
-  async createPaste(
-    text: string,
-    options?: {
-      title?: string;
-      description?: string;
-      language?: string;
-      timeout?: number;
-    }
-  ): Promise<PasteResponse> {
-    try {
-      return await createPaste(this.api, text, options);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Failed to create paste: ${error.response?.data?.message || error.message}`
-        );
-      }
-      throw error;
-    }
+  async createPaste(text: string, options?: CreatePasteOptions): Promise<PasteResponse> {
+    return createPaste(this.api, text, options);
   }
 }
