@@ -1,11 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { getErrorMessage } from '../lib/utils';
-import { ShortenerResponse, ShortenerRequest } from '../types';
-
-interface ShortenUrlOptions {
-  maxUrlLength?: number;
-  timeout?: number;
-}
+import { ShortenerResponse, ShortenerRequest, ShortenUrlOptions } from '../types';
 
 export async function shortenUrl(
   api: AxiosInstance,

@@ -1,6 +1,9 @@
 export { EZHostSDK } from './main';
 
 export type {
+  ShortenUrlOptions,
+  UploadFileOptions,
+  CreatePasteOptions,
   ShortenerResponse,
   ShortenerRequest,
   FileUploadResponse,

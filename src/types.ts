@@ -1,3 +1,19 @@
+export interface ShortenUrlOptions {
+  maxUrlLength?: number;
+  timeout?: number;
+}
+
+export interface UploadFileOptions {
+  timeout?: number;
+}
+
+export interface CreatePasteOptions {
+  title?: string;
+  description?: string;
+  language?: string;
+  timeout?: number;
+}
+
 export interface ShortenerResponse {
   success: boolean;
   message: string;

@@ -3,7 +3,7 @@ import { Readable } from 'stream';
 import { ReadStream } from 'fs';
 import { basename } from 'path';
 import { getErrorMessage, MIME_TYPES } from '../lib/utils';
-import { FileUploadResponse } from '../types';
+import { FileUploadResponse, UploadFileOptions } from '../types';
 
 const DEFAULT_FILENAME = 'upload.dat';
 
@@ -71,10 +71,6 @@ async function processFileInput(
   }
 
   return { buffer: fileBuffer, filename: resolvedFilename || DEFAULT_FILENAME };
-}
-
-interface UploadFileOptions {
-  timeout?: number;
 }
 
 export async function uploadFile(

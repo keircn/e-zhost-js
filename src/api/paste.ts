@@ -1,13 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { getErrorMessage } from '../lib/utils';
-import { PasteResponse, CreatePasteRequest } from '../types';
-
-interface CreatePasteOptions {
-  title?: string;
-  description?: string;
-  language?: string;
-  timeout?: number;
-}
+import { PasteResponse, CreatePasteRequest, CreatePasteOptions } from '../types';
 
 export async function createPaste(
   api: AxiosInstance,
