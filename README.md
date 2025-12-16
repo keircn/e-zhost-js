@@ -81,12 +81,44 @@ const buffer = await fs.promises.readFile('./image.png');
 const result = await client.uploadFile(buffer, 'image.png');
 ```
 
+### Deleting Resources
+
+You can delete files, pastes, and shortened URLs using either the full deletion URL or just the deletion key:
+
+#### Delete a File
+
+```typescript
+const result = await client.deleteFile(uploadResult.deletionUrl);
+console.log(result.message);
+```
+
+#### Delete a Paste
+
+```typescript
+const result = await client.deletePaste(pasteResult.deletionUrl);
+console.log(result.message);
+```
+
+#### Delete a Shortened URL
+
+```typescript
+const result = await client.deleteShortener(shortenerResult.deletionUrl);
+console.log(result.message);
+```
+
 ## Standalone Functions
 
 If you prefer not to use the SDK class, you can use the standalone functions directly:
 
 ```typescript
-import { shortenUrl, createPaste, uploadFile } from 'e-zhost-js';
+import {
+  shortenUrl,
+  createPaste,
+  uploadFile,
+  deleteFile,
+  deletePaste,
+  deleteShortener,
+} from 'e-zhost-js';
 import axios from 'axios';
 
 const api = axios.create({
@@ -95,6 +127,8 @@ const api = axios.create({
 });
 
 const result = await shortenUrl(api, 'https://example.com');
+
+await deleteShortener(api, result.deletionUrl);
 ```
 
 ## Types
@@ -106,11 +140,60 @@ import type {
   ShortenUrlOptions,
   UploadFileOptions,
   CreatePasteOptions,
+  DeleteOptions,
   ShortenerResponse,
   FileUploadResponse,
   PasteResponse,
+  DeleteResponse,
+  ShortenerDocument,
+  PasteDocument,
+  UploaderInfo,
+  ShortenerRequest,
+  CreatePasteRequest,
 } from 'e-zhost-js';
 ```
+
+## API Reference
+
+### EZHostSDK Methods
+
+| Method                                        | Description             |
+| --------------------------------------------- | ----------------------- |
+| `shortenUrl(url, options?)`                   | Shorten a URL           |
+| `createPaste(text, options?)`                 | Create a text paste     |
+| `uploadFile(file, filename?, options?)`       | Upload a file           |
+| `deleteFile(deletionUrlOrKey, options?)`      | Delete an uploaded file |
+| `deletePaste(deletionUrlOrKey, options?)`     | Delete a paste          |
+| `deleteShortener(deletionUrlOrKey, options?)` | Delete a shortened URL  |
+
+### Response Types
+
+#### ShortenerResponse
+
+- `success`: boolean
+- `shortendUrl`: string - The shortened URL
+- `deletionUrl`: string - URL to delete the shortened link
+- `document?`: ShortenerDocument - Additional metadata
+
+#### PasteResponse
+
+- `success`: boolean
+- `pasteUrl`: string - URL to view the paste
+- `rawUrl?`: string - URL to view raw paste content
+- `deletionUrl`: string - URL to delete the paste
+- `document?`: PasteDocument - Additional metadata including uploader info
+
+#### FileUploadResponse
+
+- `success`: boolean
+- `imageUrl?`: string - Public URL for viewing the file
+- `rawUrl?`: string - Direct CDN URL
+- `deletionUrl?`: string - URL to delete the file
+
+#### DeleteResponse
+
+- `success`: boolean
+- `message`: string - Success or error message
 
 ## License
 
