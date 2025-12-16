@@ -99,7 +99,7 @@ export async function uploadFile(
   const { buffer: fileBuffer, filename: resolvedFilename } = result;
 
   const mimeType = getMimeType(
-    new Blob([fileBuffer], { type: 'application/octet-stream' }),
+    new Blob([new Uint8Array(fileBuffer)], { type: 'application/octet-stream' }),
     resolvedFilename
   );
 
@@ -113,7 +113,7 @@ export async function uploadFile(
 
   const { timeout = 30000 } = options;
   const formData = new FormData();
-  const fileToUpload = new Blob([fileBuffer], { type: mimeType });
+  const fileToUpload = new Blob([new Uint8Array(fileBuffer)], { type: mimeType });
   formData.append('file', fileToUpload, resolvedFilename);
 
   try {
